@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIN Lookup Service</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 16px;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        width: 100%;
+        max-width: 600px;
+        box-sizing: border-box;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      button {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .result {
+        margin-top: 20px;
+      }
+      .result h2 {
+        margin-top: 0;
+      }
+      .result p {
+        margin: 5px 0;
+        user-select: text;
+        cursor: text;
+      }
+      .copy-button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+      }
+      .copy-button:hover {
+        background-color: #0056b3;
+      }
+      .credit {
+        margin-top: 20px;
+        font-size: 14px;
+        text-align: center;
+      }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #333;
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #121212;
+          color: #e0e0e0;
+        }
+        .container {
+          background-color: #1e1e1e;
+          color: #e0e0e0;
+          border: 1px solid #333;
+        }
+        h1 {
+          color: #e0e0e0;
+        }
+        input[type="text"] {
+          background-color: #333;
+          color: #e0e0e0;
+          border: 1px solid #555;
+        }
+        .error-message {
+          color: #ff6b6b;
+        }
+        button {
+          background-color: #007bff;
+          color: #fff;
+        }
+        button:hover {
+          background-color: #0056b3;
+        }
+        .result p {
+          color: #e0e0e0;
+        }
+        .copy-button {
+          background-color: #0056b3;
+          color: #fff;
+        }
+        .copy-button:hover {
+          background-color: #003d7a;
+        }
+        .credit a {
+          color: #80cbc4;
+        }
+        .credit a:hover {
+          color: #4db6ac;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>BIN Lookup Service</h1>
+      <form id="binLookupForm">
+        <div class="form-group">
+          <label for="bin">Enter BIN:</label>
+          <input
+            type="text"
+            id="bin"
+            name="bin"
+            placeholder="Enter 6-digit BIN number"
+            inputmode="numeric"
+            required
+            pattern="\d{6}"
+          >
+          <div class="error-message" id="errorMessage" aria-live="polite"></div>
+        </div>
+        <button type="submit">Lookup</button>
+      </form>
+      <div class="result" id="resultContainer" style="display: none">
+        <h2>BIN Information:</h2>
+        <p><strong>BIN:</strong> <span id="binNumber">Not available</span></p>
+        <p><strong>Brand:</strong> <span id="brand">Not available</span></p>
+        <p><strong>Category:</strong> <span id="category">Not available</span></p>
+        <p><strong>Country:</strong> <span id="countryName">Not available</span></p>
+        <p><strong>Issuer:</strong> <span id="issuer">Not available</span></p>
+        <p><strong>Issuer Phone:</strong> <span id="issuerPhone">Not available</span></p>
+        <p><strong>Issuer URL:</strong> <span id="issuerUrl">Not available</span></p>
+        <p><strong>Type:</strong> <span id="type">Not available</span></p>
+        <p><strong>ISO Code (2):</strong> <span id="isoCode2">Not available</span></p>
+        <p><strong>ISO Code (3):</strong> <span id="isoCode3">Not available</span></p>
+        <button class="copy-button" id="copyButton">Copy to Clipboard</button>
+      </div>
+      <div class="credit">
+        Data provided by <a
+          href="https://github.com/venelinkochev/bin-list-data"
+          target="_blank"
+          rel="noopener noreferrer"
+        >bin-list-data</a>.
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script>
+      let toastTimeout;
+      let activeController = null;
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
+
+      function valueOrFallback(value) {
+        return typeof value === "string" && value.trim() !== ""
+          ? value
+          : "Not available";
+      }
+
+      const binInputField = document.getElementById("bin");
+      binInputField.addEventListener("input", function () {
+        const sanitized = binInputField.value.replace(/\D/g, "").slice(0, 6);
+        if (binInputField.value !== sanitized) {
+          binInputField.value = sanitized;
+        }
+      });
+
+      document.getElementById("binLookupForm").addEventListener(
+        "submit",
+        async function (event) {
+          event.preventDefault();
+          if (activeController) {
+            activeController.abort();
+            activeController = null;
+          }
+
+          const binInput = document.getElementById("bin");
+          const errorMessage = document.getElementById("errorMessage");
+          const resultContainer = document.getElementById("resultContainer");
+
+          errorMessage.textContent = "";
+
+          const bin = binInput.value.trim();
+          if (!/^\d{6}$/.test(bin)) {
+            errorMessage.textContent =
+              "BIN must be exactly 6 digits long and contain only numbers.";
+            resultContainer.style.display = "none";
+            return;
+          }
+
+          const controller = new AbortController();
+          activeController = controller;
+
+          try {
+            const response = await fetch(`/api?issuer=${encodeURIComponent(bin)}`, {
+              signal: controller.signal,
+            });
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) {
+              resultContainer.style.display = "none";
+              errorMessage.textContent = `No BIN information found for ${bin}.`;
+              showToast("BIN not found.");
+              return;
+            }
+
+            const result = data[0];
+            document.getElementById("binNumber").textContent = valueOrFallback(result.BIN);
+            document.getElementById("brand").textContent = valueOrFallback(result.Brand);
+            document.getElementById("category").textContent = valueOrFallback(result.Category);
+            document.getElementById("countryName").textContent = valueOrFallback(result.CountryName);
+            document.getElementById("issuer").textContent = valueOrFallback(result.Issuer);
+            document.getElementById("issuerPhone").textContent = valueOrFallback(result.IssuerPhone);
+            document.getElementById("issuerUrl").textContent = valueOrFallback(result.IssuerUrl);
+            document.getElementById("type").textContent = valueOrFallback(result.Type);
+            document.getElementById("isoCode2").textContent = valueOrFallback(result.isoCode2);
+            document.getElementById("isoCode3").textContent = valueOrFallback(result.isoCode3);
+
+            resultContainer.style.display = "block";
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              return;
+            }
+            console.error("Error fetching BIN data:", error);
+            resultContainer.style.display = "none";
+            showToast(
+              "There was an error fetching the BIN information. Please try again.",
+            );
+          } finally {
+            if (activeController === controller) {
+              activeController = null;
+            }
+          }
+        },
+      );
+
+      document.getElementById("copyButton").addEventListener("click", function () {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+          showToast("Clipboard access is unavailable in this context.");
+          return;
+        }
+        const resultText = Array.from(document.querySelectorAll(".result p"))
+          .map((p) => p.textContent.trim())
+          .join("\n");
+        navigator.clipboard.writeText(resultText).then(() => {
+          showToast("BIN information copied to clipboard.");
+        }).catch((err) => {
+          console.error("Failed to copy text: ", err);
+          showToast("Failed to copy BIN information to clipboard.");
+        });
+      });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js")
+          .catch((err) =>
+            console.error("Service Worker registration failed:", err)
+          );
+      }
+    </script>
+  </body>
+</html>
